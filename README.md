@@ -9,8 +9,8 @@ The tool processes m6Anet output files, which typically contain information such
 To install and set up the m6anet-to-m6add tool for development, follow these steps:
 
 ```bash
-git clone https://github.com/nya0o0/M6A-Linker.git
-cd M6A-Linker
+git clone https://github.com/nya0o0/m6alinker
+cd  m6alinker
 pip install -e .
 ```
 
@@ -19,5 +19,5 @@ pip install -e .
 After installation, you can use the tool from the command line:
 
 ```bash
-m6a-linker --input input_m6anet_file.csv --output output_m6add_file.csv
+m6alinker -I input_m6anet_file.csv -G gencode.gtf -O output_perfix
 ```
