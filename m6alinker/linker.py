@@ -25,7 +25,7 @@ def process_files(input_file, gtf_file, output_prefix):
     # Extract transcript IDs from the modification sites
     transcript_ids_to_keep = set(modification_sites["transcript_id"])
     
-    # # Filter features from the GTF database to include only relevant transcript IDs
+    # Filter features from the GTF database to include only relevant transcript IDs
     transcript_data = []
     filtered_features = []
     for feature in db.all_features():
@@ -75,7 +75,7 @@ def process_files(input_file, gtf_file, output_prefix):
     annotated_modification_sites = annotated_modification_sites.sort_values(by='transcript_id')
 
     # Save output
-    output_file = f"{output_prefix}_{input_file}"
+    output_file = f"{output_prefix}_{input_file.split('/')[-1]}"
     annotated_modification_sites.to_csv(output_file, index=False)
     print(f"Annotated modification sites saved to {output_file}")
 
@@ -145,14 +145,14 @@ def calculate_transcript_features(grouped_features, transcript_data):
                 
             tx_length = cds_length + utr3_length + utr5_length
     
-    # Add the results for this transcript
-    transcript_features.append({
-        "transcript_id": tx_id,
-        "tx_length": tx_length,
-        "cds_length": cds_length,
-        "utr5_length": utr5_length,
-        "utr3_length": utr3_length
-    })
+        # Add the results for this transcript
+        transcript_features.append({
+            "transcript_id": tx_id,
+            "tx_length": tx_length,
+            "cds_length": cds_length,
+            "utr5_length": utr5_length,
+            "utr3_length": utr3_length
+        })
 
     # Turn the transcript features into DataFrame and merge it with the 
     tx_features = pd.DataFrame(transcript_features)
