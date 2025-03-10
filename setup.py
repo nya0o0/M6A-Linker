@@ -19,7 +19,7 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "m6anet=m6anet.__main__:main"
+            "m6alinker=m6alinker.__main__:main"
         ]
     },
     author="Selina Chen",

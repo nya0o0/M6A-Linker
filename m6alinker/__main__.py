@@ -30,7 +30,7 @@ def parse_command_line():
     parser.add_argument(
         "-O", "--output_prefix",
         help="Prefix for the output file. (Defalt: annotated_output)",
-        defalt="annotated_output")
+        default="annotated_output")
 
     # parse args
     args = parser.parse_args()
