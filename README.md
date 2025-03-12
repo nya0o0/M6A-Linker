@@ -1,8 +1,14 @@
 # m6alinker
 
-M6A-Linker is a Python tool designed to bridge the gap between m6Anet and M6ADD，creating a script that takes m6Anet output and formats it for M6ADD input, ensuring compatibility between the two systems.
+M6A-Linker is a Python tool designed to bridge the gap between [**m6Anet**](https://m6anet.readthedocs.io/en/latest/) and [**M6ADD**](http://m6add.edbc.org/)，creating a script that takes m6Anet output and formats it for queries in the M6ADD database, ensuring compatibility between the two systems.
 
-The tool processes m6Anet output files, which typically contain information such as transcript IDs, positions, and modification probabilities. It then transforms this data into a format compatible with M6ADD, including chromosome information, genomic positions, and confidence scores. The resulting output is a CSV file that can be directly used as input for M6ADD, facilitating seamless integration of m6A site predictions with disease association data.
+### Features
+
+- Annotate **m6Anet** output into a format compatible with **M6ADD**.
+- Extracts **transcript IDs, positions, and modification probabilities**.
+- Maps transcript positions to **genomic coordinates**, including **chromosome information**.
+- Outputs a **CSV file** that can inclues detailed information required by input for **M6ADD**.
+- Efficient processing with **multi-threaded progress tracking**.
 
 ### Installation
 
@@ -14,6 +20,15 @@ cd  m6alinker
 pip install -e .
 ```
 
+### Dependencies
+- `pandas`
+- `numpy`
+- `gffutils`
+- `threading`
+- `warnings`
+
+These dependencies should be installed automatically when you install the package.
+
 ### Usage
 
 After installation, you can use the tool from the command line to run a data annotation for testing:
@@ -21,10 +36,17 @@ After installation, you can use the tool from the command line to run a data ann
 ```bash
 m6alinker -I tests/test_data_m6anet_mod_sites.csv -G gencode.v32.annotation.gtf -O output_perfix
 ```
-Options:
-1. Required
-	`-I` or `--input_file` The path to the input file (i.e., the output csv file from m6anet)
-	`-G` or `--gtf_file` The path to the gtf files for reference.
-2. Optional
-	`-O` or `--output_prefix` The Prefix for the output file. (Defalt: annotated_output)
+
+This will generate an output file named:`my_annotated_results_m6anet_results.csv`
+
+#### Required Arguments:
+| Option | Description |
+|---------|-------------|
+| `-I` or `--input_file` | Path to the input file (CSV output from **m6Anet**). |
+| `-G` or `--gtf_file` | Path to the **GTF** annotation file (reference genome). |
+
+#### Optional Arguments:
+| Option | Description | Default |
+|---------|-------------|---------|
+| `-O` or `--output_prefix` | Prefix for the output file. | `annotated_output` |
 
