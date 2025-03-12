@@ -5,7 +5,7 @@ Command line interface to m6alinker
 """
 
 import argparse
-from m6alinker.linker import process_files, calculate_transcript_features, convert_to_genome_coordinates
+from m6alinker.linker import process_files, calculate_transcript_features, convert_to_genome_coordinates, rolling_progress
 
 
 def parse_command_line():

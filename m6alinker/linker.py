@@ -5,15 +5,53 @@ import numpy as np
 import gffutils
 from collections import defaultdict
 import warnings
+import sys
+import time
+import threading
+
+def rolling_progress(message, stop_event):
+    """
+    Displays a rolling progress indicator in the terminal while a task is running.
+
+    Args:
+        message (str): The message to display before the indicator.
+        stop_event (threading.Event): An event to signal when to stop the animation.
+    """
+    symbols = ['|', '/', '-', '\\']  # Spinning symbols
+    sys.stdout.write(message)  
+    sys.stdout.flush()
+    
+    i = 0
+    while not stop_event.is_set():  # Keep updating until stop_event is triggered
+        sys.stdout.write(f"\b{symbols[i % len(symbols)]}")  # Overwrite last character
+        sys.stdout.flush()
+        time.sleep(0.2)  # Update every 0.2 seconds
+        i += 1
+    
+    sys.stdout.write("\b Done! :)\n")  # Replace spinner with a checkmark
+    sys.stdout.flush()
 
 def process_files(input_file, gtf_file, output_prefix):
-    print(f"Loading input site file: {input_file}")
-    print(f"Loading GTF file: {gtf_file}")
+    """
+    Main function to process input site files, annotate them using GTF data, and create a annotation CSV file.
+
+    Args:
+        input_file (str): Path to the input CSV file containing modification sites.
+        gtf_file (str): Path to the GTF file.
+        output_prefix (str): Prefix for the output annotated file.
+    """
 
     # Load modification sites
+    print(f"Loading input site file: {input_file}...")
     modification_sites = pd.read_csv(input_file)
 
     # Create or load GTF database
+    print(f"Checking or creating GTF database: {gtf_file}...")
+    
+    stop_event = threading.Event()  # Create an event to signal when to stop the animation
+    progress_thread = threading.Thread(target=rolling_progress, args=("Processing GTF database... ", stop_event))
+    progress_thread.start()  # Start the rolling animation
+
     db_file = gtf_file + ".db"
     try: # Check whether the database already exists
         db = gffutils.FeatureDB(db_file, keep_order=True)
@@ -21,6 +59,13 @@ def process_files(input_file, gtf_file, output_prefix):
         print("Creating GTF database...")
         db = gffutils.create_db(gtf_file, dbfn=db_file, force=True, keep_order=True, disable_infer_genes=True, disable_infer_transcripts=True)
         db = gffutils.FeatureDB(db_file, keep_order=True)
+
+    stop_event.set()  # Stop the rolling animation as soon as the task is done
+    progress_thread.join()  # Wait for the animation thread to finish
+
+    stop_event.clear()  # Reset the stop event
+    progress_thread = threading.Thread(target=rolling_progress, args=("Processing GTF file... ", stop_event))
+    progress_thread.start()
 
     # Extract transcript IDs from the modification sites
     transcript_ids_to_keep = set(modification_sites["transcript_id"])
@@ -50,19 +95,26 @@ def process_files(input_file, gtf_file, output_prefix):
         transcript_id = feature.attributes["transcript_id"][0].split(".")[0]  # Remove version
         grouped_features[transcript_id].append(feature)
 
+    stop_event.set()  # Stop animation when task is done
+    progress_thread.join()  # Ensure animation thread stops
+
     # Get the transcripts features
-    tx_features = calculate_transcript_features(grouped_features, transcript_data)
+    stop_event.clear()  # Reset stop event
+    progress_thread = threading.Thread(target=rolling_progress, args=("Processing transcript features... ", stop_event))
+    progress_thread.start()
+
+    tx_features, exons = calculate_transcript_features(grouped_features, transcript_data)
     
-    # Filter exons for relevant transcripts
-    exons = defaultdict(list)
-    for tx_id, features in grouped_features.items():
-        for feature in features:
-            if feature.featuretype == "exon":
-                exons[tx_id].append(feature)
-    
+    stop_event.set()  # Stop animation
+    progress_thread.join()
+
     # Apply the convert_to_genome_coordinates function to each row of the modification_sites
+    stop_event.clear()
+    progress_thread = threading.Thread(target=rolling_progress, args=("Mapping transcript to genome locations... ", stop_event))
+    progress_thread.start()
+
     modification_sites["annotation"] = modification_sites.apply(
-        lambda row: convert_to_genome_coordinates(row["transcript_id"], row["transcript_position"],exons, tx_features), axis=1
+        lambda row: convert_to_genome_coordinates(row["transcript_id"], row["transcript_position"], exons, tx_features), axis=1
     )
     # Expand dictionary columns
     annotation_df = modification_sites["annotation"].apply(pd.Series)
@@ -74,22 +126,36 @@ def process_files(input_file, gtf_file, output_prefix):
     # Sort the annotated result according to the transcript ids
     annotated_modification_sites = annotated_modification_sites.sort_values(by='transcript_id')
 
+    stop_event.set()  # Stop animation
+    progress_thread.join()
+
     # Save output
+    stop_event.clear()
+    progress_thread = threading.Thread(target=rolling_progress, args=("Writing output file... ", stop_event))
+    progress_thread.start()
+
     output_file = f"{output_prefix}_{input_file.split('/')[-1]}"
     annotated_modification_sites.to_csv(output_file, index=False)
-    print(f"Annotated modification sites saved to {output_file}")
+
+    stop_event.set()  # Stop animation
+    progress_thread.join()
+
+    print(f"Annotated modification sites saved to {output_file}! :D")
 
 def calculate_transcript_features(grouped_features, transcript_data):
     '''
-    Compute transcript features for grouped transcript data.
-    For each transcript:
-    - Sort CDS features by start and end positions to find start_codon and stop_codon positions.
-    - Calculate CDS length by summing all CDS feature lengths.
-    - Determine UTR5 and UTR3 lengths based on UTR positions relative to start_codon and stop_codon, considering the strand.
-    - If no CDS features exist, set CDS_len, utr5_len, and utr3_len to 0.
+    Compute transcript features: transcript length, CDS length, and UTR lengths.
+
+    Args:
+        grouped_features (dict): Dictionary of transcript IDs mapped to their genomic features.
+        transcript_data (DataFrame): DataFrame containing transcript data (transcript_ids, gene_names, transcript_types).
+
+    Returns:
+        DataFrame: Updated transcript metadata with computed feature lengths.
     '''
 
     transcript_features = []  # Store the results for all transcripts
+    exons = defaultdict(list)  # Store exon features dictionary
 
     for tx_id, features in grouped_features.items():
         cds_length = 0
@@ -104,6 +170,8 @@ def calculate_transcript_features(grouped_features, transcript_data):
         utr_features = [f for f in features if f.featuretype == "UTR"]
         exon_features = [f for f in features if f.featuretype == "exon"]
 
+        # Store exon features dictionary
+        exons[tx_id] = exon_features 
 
         # If no CDS features exist, set all lengths to 0， and compute transcript length by adding exons
         if not cds_features:
@@ -154,17 +222,23 @@ def calculate_transcript_features(grouped_features, transcript_data):
             "utr3_length": utr3_length
         })
 
-    # Turn the transcript features into DataFrame and merge it with the 
-    tx_features = pd.DataFrame(transcript_features)
-    tx_features = tx_features.merge(transcript_data, on="transcript_id", how="left")
-
-    return tx_features
+    return pd.DataFrame(transcript_features).merge(transcript_data, on="transcript_id", how="left"), exons
 
 # Function to convert transcript coordinates to genomic coordinates
 def convert_to_genome_coordinates(tx_name, tx_pos, exonsdb, txfdb):
     """
     Convert transcript coordinates to genome coordinates and annotate regions.
+
+    Args:
+        tx_name (str): Transcript ID.
+        tx_pos (int): Position in transcript coordinates.
+        exonsdb (dict): Dictionary of transcript IDs mapped to exon features.
+        txfdb (DataFrame): DataFrame containing transcript feature data.
+
+    Returns:
+        dict: Dictionary containing the genomic position, chromosome, exon junction distances, and region annotation.
     """
+    
     if tx_name not in exonsdb:
         warnings.warn(f"Transcript {tx_name} not found in exons database.")
         return {

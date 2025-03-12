@@ -15,7 +15,6 @@ setup(
         "pandas",
         "numpy",
         "gffutils",
-        "pybedtools"
     ],
     entry_points={
         "console_scripts": [
