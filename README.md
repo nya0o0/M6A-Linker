@@ -31,10 +31,16 @@ These dependencies should be installed automatically when you install the packag
 
 ### Usage
 
-After installation, you can use the tool from the command line to run a data annotation for testing:
+After installation, you can first download the refenrence gtf file form https://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_47/gencode.v47.annotation.gtf.gz to the `tests/` directory, decompress it 
+
+```
+gzip -d gencode.v47.annotationgtf.gz
+```
+
+and use the tool from the command line to run a data annotation for testing:
 
 ```bash
-m6alinker -I tests/test_data_m6anet_mod_sites.csv -G gencode.v32.annotation.gtf -O output_perfix
+m6alinker -I tests/test_data_m6anet_mod_sites.csv -G tests/gencode.v47.annotation.gtf -O output_perfix
 ```
 
 This will generate an output file named:`my_annotated_results_m6anet_results.csv`
