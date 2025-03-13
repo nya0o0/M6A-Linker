@@ -64,7 +64,7 @@ def process_files(input_file, gtf_file, output_prefix):
     progress_thread.join()  # Wait for the animation thread to finish
 
     stop_event.clear()  # Reset the stop event
-    progress_thread = threading.Thread(target=rolling_progress, args=("Processing GTF file... ", stop_event))
+    progress_thread = threading.Thread(target=rolling_progress, args=("Extracting transcrpt data from GTF database... ", stop_event))
     progress_thread.start()
 
     # Extract transcript IDs from the modification sites
@@ -100,7 +100,7 @@ def process_files(input_file, gtf_file, output_prefix):
 
     # Get the transcripts features
     stop_event.clear()  # Reset stop event
-    progress_thread = threading.Thread(target=rolling_progress, args=("Processing transcript features... ", stop_event))
+    progress_thread = threading.Thread(target=rolling_progress, args=("Calculating transcript features... ", stop_event))
     progress_thread.start()
 
     tx_features, exons = calculate_transcript_features(grouped_features, transcript_data)
