@@ -56,3 +56,11 @@ This will generate an output file named:`my_annotated_results_m6anet_results.csv
 |---------|-------------|---------|
 | `-O` or `--output_prefix` | Prefix for the output file. | `annotated_output` |
 
+
+### References
+Hendra, C., Pratanwanich, P. N., Wan, Y. K., Goh, W. S. S., Thiery, A., & Göke, J. (2022). Detection of m6A from direct RNA sequencing using a multiple instance learning framework. _Nature Methods, 19_(12), 1590–1598. https://doi.org/10.1038/s41592-022-01666-1
+
+Zhou, D., Wang, H., Bi, F., Xing, J., Gu, Y., Wang, C., Zhang, M., Huang, Y., Zeng, J., Wu, Q., & Zhang, Y. (2021). M6ADD: A comprehensive database of m6A modifications in diseases. _RNA Biology, 18_(12), 2354–2362. https://doi.org/10.1080/15476286.2021.1913302
+
+
+
