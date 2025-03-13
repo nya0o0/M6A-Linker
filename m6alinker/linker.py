@@ -165,20 +165,17 @@ def calculate_transcript_features(grouped_features, transcript_data):
         start_codon_pos = None
         stop_codon_pos = None
 
-        # Separate features by type
+        # Separate features by type and store exon features in a dictionary
         cds_features = [f for f in features if f.featuretype == "CDS"]
         utr_features = [f for f in features if f.featuretype == "UTR"]
-        exon_features = [f for f in features if f.featuretype == "exon"]
-
-        # Store exon features dictionary
-        exons[tx_id] = exon_features 
+        exons[tx_id] = [f for f in features if f.featuretype == "exon"]
 
         # If no CDS features exist, set all lengths to 0， and compute transcript length by adding exons
         if not cds_features:
             cds_length = 0
             utr5_length = 0
             utr3_length = 0
-            for exon in exon_features:
+            for exon in exons[tx_id]:
                 tx_length += exon.end - exon.start + 1
 
         else:
@@ -205,7 +202,7 @@ def calculate_transcript_features(grouped_features, transcript_data):
                             utr5_length += utr_length
                         elif utr.start > stop_codon_pos:  # 3' UTR is after stop_codon
                             utr3_length += utr_length
-                    elif strand == "-":
+                    else:
                         if utr.start > start_codon_pos:  # 5' UTR is after start_codon on negative strand
                             utr5_length += utr_length
                         elif utr.end < stop_codon_pos:  # 3' UTR is before stop_codon on negative strand
