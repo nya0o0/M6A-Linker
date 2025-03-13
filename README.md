@@ -43,7 +43,7 @@ and use the tool from the command line to run a data annotation for testing:
 m6alinker -I tests/test_data_m6anet_mod_sites.csv -G tests/gencode.v47.annotation.gtf -O output_perfix
 ```
 
-This will generate an output file named:`my_annotated_results_m6anet_results.csv`
+This will generate an output file named:`my_annotated_results_m6anet_results.csv` to the current pathway.
 
 #### Required Arguments:
 | Option | Description |
